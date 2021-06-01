@@ -112,3 +112,4 @@ def std(GAUSS_ITERATION: int, net: torch.nn, imgs: torch.tensor) -> torch.tensor
     mean_y_pred = y_pred_samples.mean(dim=0)  # shape: batch, H, W
     std_y_pred = y_pred_samples.std(dim=0)  # shape: batch, H, W
     _std = get_segmentation_mask_uncertainty(std_y_pred)
+    return _std
