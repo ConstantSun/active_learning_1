@@ -21,25 +21,25 @@ def eval_net(net, loader, n_classes, device, gauss_iteration=GAUSS_ITERATION):
             true_masks = true_masks.to(device=device, dtype=mask_type)  # BHWC
             true_masks = true_masks[:, :1, :, :]
 
-            if net.is_dropout:
-                y_pred_samples = []
-                for i in range(gauss_iteration):
-                    with torch.no_grad():
-                        logits = net(imgs) #BCHW
-                        if logits.shape[1] == 1:
-                            y_pred = torch.sigmoid(logits)
-                            y_pred = y_pred[:, :1, :, :]
-                        else:
-                            y_pred = torch.softmax(logits, dim=1)
-                        y_pred_samples.append(y_pred[:, 0, :, :])  # y_pred_samples's shape: (inx, bat, H, W )
-                y_pred_samples = torch.stack(y_pred_samples, dim=0)
-                y_pred_samples = y_pred_samples.type(torch.cuda.FloatTensor)
-                mean_y_pred = y_pred_samples.mean(dim=0)  # shape: batch, H, W
-                pred = mean_y_pred.unsqueeze(1)
-            else:
-                with torch.no_grad():
-                    pred = net(imgs)
-                    pred = torch.sigmoid(pred)
+            # if net.is_dropout:
+            #     y_pred_samples = []
+            #     for i in range(gauss_iteration):
+            #         with torch.no_grad():
+            #             logits = net(imgs) #BCHW
+            #             if logits.shape[1] == 1:
+            #                 y_pred = torch.sigmoid(logits)
+            #                 y_pred = y_pred[:, :1, :, :]
+            #             else:
+            #                 y_pred = torch.softmax(logits, dim=1)
+            #             y_pred_samples.append(y_pred[:, 0, :, :])  # y_pred_samples's shape: (inx, bat, H, W )
+            #     y_pred_samples = torch.stack(y_pred_samples, dim=0)
+            #     y_pred_samples = y_pred_samples.type(torch.cuda.FloatTensor)
+            #     mean_y_pred = y_pred_samples.mean(dim=0)  # shape: batch, H, W
+            #     pred = mean_y_pred.unsqueeze(1)
+            # else:
+            with torch.no_grad():
+                pred = net(imgs)
+                pred = torch.sigmoid(pred)
 
             if n_classes > 1:
                 tot += F.cross_entropy(pred, true_masks).item()
