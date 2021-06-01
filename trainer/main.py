@@ -1,6 +1,8 @@
 import sys
 
-sys.path.append("/home/cotai/Phi/active/cleancode/")
+# sys.path.append("/home/cotai/Phi/active/cleancode/")
+sys.path.append("/content/active_learning_1/") #colab
+
 from models.pan_regnety120.pan import PAN
 import argparse
 import logging
@@ -204,7 +206,6 @@ if __name__ == '__main__':
                  f'\tUsing {acquisition_func} STRATEGY for collecting data for next phase \n'                 
                  f'\t{"Bilinear" if bilinear else "Transposed conv"} upscaling')
 
-    # For a specific architecture
     try:
         train_net(dir_checkpoint=dir_ckp,
                   n_classes=n_classes,
@@ -219,5 +220,3 @@ if __name__ == '__main__':
             sys.exit(0)
         except SystemExit:
             os._exit(0)
-
-# sửa số epoch, Gaussian iteration
