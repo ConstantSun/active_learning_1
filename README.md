@@ -1,2 +1,7 @@
-# active_learning_1
-ActiveLearning on PAN-RegnetY120 architecture with approx 87% iou
+# active_learning_segmentation
+
+### How to run:
+Go to trainer folder and run: 
+
+$ python main.py -acq 0 -cuda 0 
+
