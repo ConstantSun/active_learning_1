@@ -43,7 +43,6 @@ def update_training_pool_ids(net: torch.nn, training_pool_ids_path: str, all_tra
                     available function: mutual_information, mean_first_entropy, category_first_entropy, std, random
     This function will use an acquisition function to collect new NUM_FETCHED_IMG imgs into training pool each phase.
         /Increase the json file NUM_FETCHED_IMG more imgs each phase.
-
     """
     batch_size = 1
     training_pool_data = get_pool_data(training_pool_ids_path)
@@ -59,21 +58,15 @@ def update_training_pool_ids(net: torch.nn, training_pool_ids_path: str, all_tra
     elif acquisition_func == "std":
         evaluation_criteria = acquisition_function.std
     elif acquisition_func == "random":
-        with open(all_training_data, 'r+') as f:
-            # dic = json.load(f)
-            # ids = dic["ids"]
-            # random_eles = random.sample(ids, NUM_FETCHED_IMG)
-            # for i in random_eles:
-            #     add_image_id_to_pool(i, training_pool_ids_path)
-            random_elements = random.sample(active_pool, NUM_FETCHED_IMG)
-            for i in random_elements:
-                add_image_id_to_pool(i, training_pool_ids_path)
+        random_elements = random.sample(active_pool, NUM_FETCHED_IMG)
+        for i in random_elements:
+            add_image_id_to_pool(i, training_pool_ids_path)
         return
     else:
         print("Error choosing acquisition function")
         evaluation_criteria = None
 
-    dataset = RestrictedDataset(dir_img, dir_mask, list(active_pool), train=False)
+    dataset = RestrictedDataset(dir_img, dir_mask, list(active_pool), train=False, active=True)
     pool_loader = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=4, pin_memory=True)
 
     value = []
