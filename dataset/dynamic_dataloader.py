@@ -16,7 +16,7 @@ from albumentations import (
 
 
 class RestrictedDataset(Dataset):
-    def __init__(self, imgs_dir: str, masks_dir: str, selected_id_images: list, train=True):
+    def __init__(self, imgs_dir: str, masks_dir: str, selected_id_images: list, train=True, active = False):
         """
         imgs_dir: image directory
         masks_dir: mask directory
@@ -25,6 +25,7 @@ class RestrictedDataset(Dataset):
         self.imgs_dir = imgs_dir
         self.masks_dir = masks_dir
         self.train = train
+        self.active = active
         if train:
             # Active learning:
             # Updating selected image for the next training phase:
@@ -33,26 +34,16 @@ class RestrictedDataset(Dataset):
         else:
             self.ids = [splitext(file)[0] for file in listdir(imgs_dir)
                         if not file.startswith('.')]
+        if active:
+            self.ids = selected_id_images
+
         logging.info(f'Creating dataset with {len(self.ids)} examples')
 
     def __len__(self):
-        """
-        Returns the length of the length.
-
-        Args:
-            self: (todo): write your description
-        """
         return len(self.ids)
 
     @classmethod
     def preprocess(cls, pil_img):
-        """
-        Preprocess a pil image.
-
-        Args:
-            cls: (todo): write your description
-            pil_img: (todo): write your description
-        """
         pil_img = pil_img.resize((256, 256))
         img_nd = np.array(pil_img)
 
@@ -69,15 +60,6 @@ class RestrictedDataset(Dataset):
 
     @classmethod
     def postprocess_augment(cls, img_nd: np.array):
-        """
-        Postprocess an image.
-
-        Args:
-            cls: (todo): write your description
-            img_nd: (todo): write your description
-            np: (todo): write your description
-            array: (array): write your description
-        """
         if len(img_nd.shape) == 2:
             img_nd = np.expand_dims(img_nd, axis=2)
 
@@ -89,13 +71,6 @@ class RestrictedDataset(Dataset):
         return img_trans
 
     def strong_aug(self, p=0.5):
-        """
-        Return a 3darray of the quadrature.
-
-        Args:
-            self: (todo): write your description
-            p: (todo): write your description
-        """
         return Compose([
             RandomRotate90(),
             Flip(),
@@ -125,13 +100,6 @@ class RestrictedDataset(Dataset):
         ], p=p)
 
     def __getitem__(self, i):
-        """
-        Get the mask of - image.
-
-        Args:
-            self: (todo): write your description
-            i: (todo): write your description
-        """
         idx = self.ids[i]
 
         mask_file = glob(self.masks_dir + idx  + '.*')
@@ -145,7 +113,7 @@ class RestrictedDataset(Dataset):
         mask = Image.open(mask_file[0])
         img = Image.open(img_file[0])
 
-        if self.train == False:
+        if self.train == False or self.active == True:
             img = self.preprocess(img)
             mask = self.preprocess(mask)
 
