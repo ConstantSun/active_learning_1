@@ -1,13 +1,14 @@
+import os
 import sys
-
 # sys.path.append("/home/cotai/Phi/active/cleancode/")
-sys.path.append("/content/active_learning_1/") #colab
+# sys.path.append("/content/active_learning_1/") #colab
+sys.path.append(os.path.dirname(os.getcwd()))
+
 
 from models.pan_regnety120.pan import PAN
 import argparse
 import logging
-import os
-import sys
+
 
 import torch
 import torch.nn as nn
@@ -98,10 +99,10 @@ def train_net(
     else:
         criterion_no_dropout = nn.BCEWithLogitsLoss()
 
-    num_phases = 35
+    num_phases = 50
     # total 2689 imgs, within each phase: fetching 100 imgs to training set.
-    training_pool_ids_path = f"../database/data_one64th_{acquisition_function}.json"
-    all_training_data = "../database/data_all.json"
+    training_pool_ids_path =  f"{data_dir}/data_one64th_{acquisition_function}.json"
+    all_training_data =  f"{data_dir}/data_all.json"
 
     pre_phase = 0
     pre_epoch = 0
@@ -147,12 +148,16 @@ def get_args():
                         help='Choose acquisition function index for collecting data')
     parser.add_argument('-cuda', '--cuda-inx', type=int, nargs='?', default=1,
                         help='index of cuda', dest='cuda_inx')
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=30,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=20,
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=4,
                         help='Batch size', dest='batchsize')
     parser.add_argument('-lr', '--learning-rate', metavar='LR', type=float, nargs='?', default=0.00001,
                         help='Learning rate', dest='lr')
+    parser.add_argument('-savedir', '--savedir', dest='save_directory', type=str, default="/content/drive/MyDrive/thesis_uni/dlv3_dpn98",
+                        help='Directory of tfboard and checkpoint path')
+    parser.add_argument('-datadir', '--datadir', dest='data_directory', type=str, default="/content/drive/MyDrive/thesis_uni/act_1",
+                        help='Directory of tfboard and checkpoint path')        
     parser.add_argument('-f', '--load', dest='load', type=str, default=False,
                         help='Load model from a .pth file')
 
@@ -168,10 +173,10 @@ def get_acquisition_func(i: int):
     """
     switcher = {
         0: "cfe",
-        1: "mfe",
+        1: "mfe", #
         2: "std",
         3: "mi",
-        4: "random",
+        4: "random", #
     }
     return switcher.get(i, "cfe")
 
@@ -179,7 +184,16 @@ def get_acquisition_func(i: int):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     args = get_args()
-    current_dir = os.getcwd()
+
+    tf_dir = None                # not Colab
+    current_dir = os.getcwd()    # not Colab
+    data_dir = os.path.join(os.path.abspath(os.path.join(os.getcwd(), os.pardir)), "database")
+
+    # current_dir = args.save_directory  # colab
+    # tf_dir      = args.save_directory  # colab
+    # data_dir    = args.data_directory  # colab
+    
+
     try:
         os.mkdir(os.path.join(current_dir, "check_point_active"))
         logging.info('Created ckpt active directory')
@@ -187,7 +201,8 @@ if __name__ == '__main__':
         pass
 
     acquisition_func = get_acquisition_func(args.acquisition_func)
-    dir_ckp = os.path.join(current_dir, f"check_point_active/{acquisition_func}/")
+    dir_ckp = os.path.join(current_dir, f"check_point_active/{acquisition_func}/")  
+        
 
     if torch.cuda.is_available():
         _device = 'cuda:' + str(args.cuda_inx)
@@ -206,13 +221,16 @@ if __name__ == '__main__':
                  f'\tUsing {acquisition_func} STRATEGY for collecting data for next phase \n'                 
                  f'\t{"Bilinear" if bilinear else "Transposed conv"} upscaling')
 
+    # For a specific architecture
     try:
         train_net(dir_checkpoint=dir_ckp,
                   n_classes=n_classes,
                   n_channels=n_channels,
                   epochs=args.epochs,
                   device=device,
-                  acquisition_function=acquisition_func
+                  acquisition_function=acquisition_func,
+                  tf_log_dir=tf_dir,
+                  data_dir=data_dir
                   )
     except KeyboardInterrupt:
         logging.info('Saved interrupt')
