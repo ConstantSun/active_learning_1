@@ -32,3 +32,12 @@ $ conda activate pytorch
 $ cd code/act_lear_2/trainer
 
 $ python main.py -acq 1
+
+
+
+### Các tham số ảnh hưởng đến hiệu năng của các hàm acquisition (in my opinion):
+- lúc tranining model qua các phase, model càng to thì nên càng đê nhiều epoches lúc training.
+
+- lúc eval thì càng để nhiều gauss_iter càng tốt.
+
+
