@@ -1,4 +1,6 @@
 # active_learning_segmentation
+https://arxiv.org/abs/2107.08440
+Oral presentation at KSE - An International Conference on Knowledge and Systems Engineering Oct 2021.
 
 ### How to run:
 Go to trainer folder and run: 
